@@ -79,7 +79,6 @@ resource "aws_launch_template" "web_sever_as" {
   name                   = "myproject"
   ami                    = var.ami_id
   instance_type          = "t2.micro"
-  subnet_id              = ["aws_subnet.public_1.id ", "aws_subnet.public_2.id"]
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   key_name               = aws_key_pair.deployer.key_name
 
@@ -90,7 +89,7 @@ resource "aws_launch_template" "web_sever_as" {
 
 resource "aws_elb" "web_server_lb" {
   name                    = "web_server_lb"
-  subnet_id               = aws_subnet.public_1.id
+  subnet_id              = ["aws_subnet.public_1.id ", "aws_subnet.public_2.id"]
   vpc_security_group_ids = [aws_security_group.web_server.id]
   listener {
    instance_port          = 8000
