@@ -91,12 +91,6 @@ resource "aws_elb" "web_server_lb" {
   name                    = "web_server_lb"
   subnet_id              = ["aws_subnet.public_1.id ", "aws_subnet.public_2.id"]
   vpc_security_group_ids = [aws_security_group.web_server.id]
-  listener {
-   instance_port          = 8000
-                            http
-    lb_port                = 80
-    lb_protocol            = "http"
- }
   tags = {
     Name = "terraform-elb"
   }
