@@ -2,7 +2,7 @@
 resource "aws_security_group" "web_server" {
   name        = "web-server-sg"
   description = "Allow HTTP and optional SSH access"
-  vpc_id      = "vpc-04dee8091ad8f0506" # Replace with your actual VPC ID
+  vpc_id      = "vpc-0ea715128139b6639" # Replace with your actual VPC ID
 
   ingress {
     description = "HTTP access"
@@ -51,7 +51,7 @@ resource "aws_launch_template" "web_sever_as" {
 resource "aws_elb" "web_server_lb" {
   name            = "web-server-lb"
   security_groups = [aws_security_group.web_server.id]
-  subnets         = ["subnet-0ea715128139b6639", "subnet-0f02721f3c50a4541"] # Replace with valid subnet IDs
+  subnets         = ["subnet-05ea94e9e07fda83f", "subnet-0f02721f3c50a4541"] # Replace with valid subnet IDs
 
   listener {
     instance_port     = 8000
