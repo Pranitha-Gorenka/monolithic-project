@@ -1,96 +1,24 @@
-provider "aws" {
-  region = var.aws_region
-}
-
-resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
-  tags = {
-    Name = "my-vpc"
-  }
-}
-
-resource "aws_subnet" "public_1" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_1
-  availability_zone       = "${var.aws_region}a"
-  map_public_ip_on_launch = true
-  tags = {
-    Name = "public-subnet-1"
-  }
-}
-
-resource "aws_subnet" "public_2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_2
-  availability_zone       = "${var.aws_region}b"
-  map_public_ip_on_launch = true
-  tags = {
-    Name = "public-subnet-2"
-  }
-}
-
-
-resource "aws_security_group" "bastion_sg" {
-  name        = "bastion-sg"
-  description = "Allow SSH from anywhere"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "private_sg" {
-  name        = "private-sg"
-  description = "Allow SSH only from bastion"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [aws_security_group.bastion_sg.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
-
 resource "aws_launch_template" "web_sever_as" {
   name                   = "myproject"
-  ami                    = var.ami_id
+  ami                    =  "ami-000ec6c25978d5999"
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
-  key_name               = aws_key_pair.deployer.key_name
-
+  key_name               = "keypair"
   tags = {
     Name = "DevOps"
   }
 }
 
 resource "aws_elb" "web_server_lb" {
-  name                    = "web_server_lb"
-  subnet_id              = ["aws_subnet.public_1.id ", "aws_subnet.public_2.id"]
-  vpc_security_group_ids = [aws_security_group.web_server.id]
+  name            = "web_server_lb"
+  security_groups = [aws_security_group.web_server.id]
+  subnet_id       = ["subnet-0ea715128139b6639 ", "subnet-0f02721f3c50a4541"]
+  listener {
+   instance_port        = 8000
+   instance_protocol    = "http"
+   lb_port              = 80
+   lb_protocol          = "http"
+  }
   tags = {
     Name = "terraform-elb"
   }
@@ -103,7 +31,7 @@ resource "aws_autoscaling_group" "web_server_asg" {
   desired_capacity        = 2
   health_check_type       = "EC2"
   load_balancers          = [aws_elb.web_server_lb.name]
-  availability_zones       = ["${var.aws_region}a","${var.aws_region}a"]
+  availability_zones       = ["us-east-1a","us-east-1b"]
   launch_template {
        id                 = aws_launch_template.web_server_as.id
        version            = "$Latest"
