@@ -34,7 +34,7 @@ resource "aws_launch_template" "web_sever_as" {
   name                   = "myproject"
   image_id               = "ami-000ec6c25978d5999"
   instance_type          = "t2.micro"
-  key_name               = "keypair" # Replace with your key name
+  key_name               = "foodora-keypair" # Replace with your key name
 
   network_interfaces {
     device_index                = 0
