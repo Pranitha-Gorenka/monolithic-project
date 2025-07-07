@@ -9,13 +9,6 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "main-gw"
-  }
-}
-
 resource "aws_subnet" "public_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_1
@@ -36,46 +29,6 @@ resource "aws_subnet" "public_2" {
   }
 }
 
-resource "aws_subnet" "private_1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_1
-  availability_zone = "${var.aws_region}a"
-  tags = {
-    Name = "private-subnet-1"
-  }
-}
-
-resource "aws_subnet" "private_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_2
-  availability_zone = "${var.aws_region}b"
-  tags = {
-    Name = "private-subnet-2"
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Name = "public-route-table"
-  }
-}
-
-resource "aws_route_table_association" "public_1" {
-  subnet_id      = aws_subnet.public_1.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "public_2" {
-  subnet_id      = aws_subnet.public_2.id
-  route_table_id = aws_route_table.public.id
-}
 
 resource "aws_security_group" "bastion_sg" {
   name        = "bastion-sg"
@@ -122,26 +75,44 @@ resource "aws_key_pair" "deployer" {
   public_key = file("~/.ssh/id_rsa.pub")
 }
 
-resource "aws_instance" "bastion" {
+resource "aws_launch_template" "web_sever_as" {
+  name                   = "myproject"
   ami                    = var.ami_id
   instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public_1.id
+  subnet_id              = ["aws_subnet.public_1.id ", "aws_subnet.public_2.id"]
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   key_name               = aws_key_pair.deployer.key_name
 
   tags = {
-    Name = "bastion-host"
+    Name = "DevOps"
   }
 }
 
-resource "aws_instance" "private" {
-  ami                    = var.ami_id
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.private_1.id
-  vpc_security_group_ids = [aws_security_group.private_sg.id]
-  key_name               = aws_key_pair.deployer.key_name
-
+resource "aws_elb" "web_server_lb" {
+  name                    = "web_server_lb"
+  subnet_id               = aws_subnet.public_1.id
+  vpc_security_group_ids = [aws_security_group.web_server.id]
+  listener {
+   instance_port          = 8000
+                            "http"
+    lb_port                = 80
+    lb_protocol            = "http"
+ }
   tags = {
-    Name = "private-host"
+    Name = "terraform-elb"
   }
+}
+
+resource "aws_autoscaling_group" "web_server_asg" {
+  name                    = "web_server_asg"
+  min_size                = 1
+  max_size                = 3
+  desired_capacity        = 2
+  health_check_type       = "EC2"
+  load_balancers          = [aws_elb.web_server_lb.name]
+  availability_zones       = ["${var.aws_region}a","${var.aws_region}a"]
+  launch_template {
+       id                 = aws_launch_template.web_server_as.id
+       version            = "$Latest"
+     }
 }
