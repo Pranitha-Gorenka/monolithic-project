@@ -1,5 +1,5 @@
-Squid Game DevOps Project
-<img width="100" src="image1.png" class="banner" alt="Squid Game Banner">
+[!Squid Game DevOps Project]
+<img width="300" src="image1.png" class="banner" alt="Squid Game Banner">
 
 # 🧩 Project Breakdown — Behind the Scenes
 
