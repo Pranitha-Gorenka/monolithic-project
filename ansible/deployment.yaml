@@ -30,9 +30,7 @@
         version: main
 
     - name: Enable EPEL repository (for stress)
-      shell: amazon-linux-extras enable epel -y
-      args:
-        creates: /etc/yum.repos.d/epel.repo
+      yum: name=epel-release state=present
 
     - name: install stress dependices
       yum: name=stress state=present
