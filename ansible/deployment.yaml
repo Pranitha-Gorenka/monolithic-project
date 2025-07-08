@@ -7,6 +7,7 @@
   vars:
     ansible_ssh_private_key_file: "/etc/ansible/foodora-keypair.pem"
     ansible_ssh_user: "ec2-user"
+    cw_config_path: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
   tasks:
     - name: install web server
@@ -35,3 +36,45 @@
     - name: install stress dependices
       yum: name=stress state=present
 
+    # CloudWatch Agent related tasks
+    - name: Install CloudWatch Agent
+      yum:
+        name: amazon-cloudwatch-agent
+        state: present
+
+    - name: Create CloudWatch Agent configuration file
+      copy:
+        dest: "{{ cw_config_path }}"
+        content: |
+          {
+            "logs": {
+              "logs_collected": {
+                "files": {
+                  "collect_list": [
+                    {
+                      "file_path": "/var/log/httpd/access_log",
+                      "log_group_name": "webserver-access-logs",
+                      "log_stream_name": "{instance_id}/access_log",
+                      "timezone": "Local"
+                    },
+                    {
+                      "file_path": "/var/log/httpd/error_log",
+                      "log_group_name": "webserver-error-logs",
+                      "log_stream_name": "{instance_id}/error_log",
+                      "timezone": "Local"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+
+    - name: Start CloudWatch Agent
+      shell: >
+        /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+        -a fetch-config
+        -m ec2
+        -c file:{{ cw_config_path }}
+        -s
+      args:
+        executable: /bin/bash
