@@ -28,3 +28,12 @@
         repo: "https://github.com/Pranitha-Gorenka/squidgame3.git"
         dest: /var/www/html/
         version: main
+
+    - name: Enable EPEL repository (for stress)
+      shell: amazon-linux-extras enable epel -y
+      args:
+        creates: /etc/yum.repos.d/epel.repo
+
+    - name: install stress dependices
+      yum: name=stress state=present
+
