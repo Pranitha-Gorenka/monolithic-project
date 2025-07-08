@@ -18,6 +18,11 @@
     - name: install git
       yum: name=git state=present
 
+    - name: Delete existing directory
+      file:
+        path: /var/www/html/
+        state: absent
+
     - name: get the source code from github
       git:
         repo: "https://github.com/devops0014/aws-node-js.git"
