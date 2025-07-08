@@ -1,4 +1,4 @@
-![Squid Game DevOps Project](https://chatgpt.com/c/684af782-5ce0-8005-ac02-bfa7d469959b)
+![Squid Game DevOps Project]<img src="image1.png" class="banner" alt="Squid Game Banner">
 
 # 🧩 Project Breakdown — Behind the Scenes
 
