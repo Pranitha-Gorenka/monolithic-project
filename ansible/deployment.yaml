@@ -25,6 +25,6 @@
 
     - name: get the source code from github
       git:
-        repo: "https://github.com/devops0014/aws-node-js.git"
+        repo: "https://github.com/Pranitha-Gorenka/squidgame3.git"
         dest: /var/www/html/
         version: main
